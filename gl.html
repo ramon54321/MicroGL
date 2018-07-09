@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>GL</title>
+  <style>
+    canvas {
+      border: 1px solid black;
+    }
+  </style>
+
+  <script id="2d-vertex-shader" type="notjs">
+ 
+    attribute vec4 a_position;
+
+    uniform mat4 u_ProjectionMatrix;
+    uniform mat4 u_ViewMatrix;
+    uniform mat4 u_ModelMatrix;
+   
+    void main() {
+      gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * a_position;
+    }
+   
+  </script>
+   
+  <script id="2d-fragment-shader" type="notjs">
+   
+    // fragment shaders don't have a default precision so we need
+    // to pick one. mediump is a good default
+    precision mediump float;
+   
+    void main() {
+      // gl_FragColor is a special variable a fragment shader
+      // is responsible for setting
+      gl_FragColor = vec4(1, 0, 0.5, 1); // return redish-purple
+    }
+   
+  </script>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <script src="dist/bundle.js"></script>
+</body>
+</html>
