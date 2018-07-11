@@ -1,3 +1,4 @@
+import { mat4 } from "gl-matrix";
 
 export class Shader {
   id: WebGLShader
@@ -18,11 +19,19 @@ export class Shader {
 }
 
 export class ShaderProgram {
+  gl: WebGLRenderingContext
   id: WebGLProgram
   vertexShader: Shader
   fragmentShader: Shader
 
+  a_Position: number
+  u_ProjectionMatrix: WebGLUniformLocation
+  u_ViewMatrix: WebGLUniformLocation
+  u_ModelMatrix: WebGLUniformLocation
+  u_Texture: WebGLUniformLocation
+
   constructor(gl: WebGLRenderingContext, vertexShader: Shader, fragmentShader: Shader) {
+    this.gl = gl
     this.vertexShader = vertexShader
     this.fragmentShader = fragmentShader
 
@@ -37,8 +46,47 @@ export class ShaderProgram {
       gl.deleteProgram(this.id)
       throw new Error(error)
     }
+
+    this.u_ProjectionMatrix = gl.getUniformLocation(this.id, 'u_ProjectionMatrix')
+    this.u_ViewMatrix = gl.getUniformLocation(this.id, 'u_ViewMatrix')
+    this.u_ModelMatrix = gl.getUniformLocation(this.id, 'u_ModelMatrix')
+    this.u_Texture = gl.getUniformLocation(this.id, 'u_Texture')
+    
+    this.a_Position = gl.getAttribLocation(this.id, 'a_Position')
+    this.gl.enableVertexAttribArray(this.a_Position)
+  }
+
+  bind() {
+    this.gl.useProgram(this.id)
+    this.gl.vertexAttribPointer(this.a_Position, 3, this.gl.FLOAT, false, 0, 0)
   }
 }
+
+export class GridShaderProgram extends ShaderProgram {
+  a_Temperature: number
+
+  constructor(gl: WebGLRenderingContext, vertexShader: Shader, fragmentShader: Shader) {
+    super(gl, vertexShader, fragmentShader)
+
+    this.a_Temperature = gl.getAttribLocation(this.id, 'a_Temperature')
+    this.gl.enableVertexAttribArray(this.a_Temperature)
+  }
+
+  bind() {
+    this.gl.useProgram(this.id)
+    this.gl.vertexAttribPointer(this.a_Position, 3, this.gl.FLOAT, false, 16, 0)
+    this.gl.vertexAttribPointer(this.a_Temperature, 1, this.gl.FLOAT, false, 16, 12)
+  }
+}
+
+/*
+var a_Position = gl.getAttribLocation(shaderProgram.id, 'a_Position')
+
+// -- Set up uniforms
+let u_ProjectionMatrix = gl.getUniformLocation(shaderProgram.id, 'u_ProjectionMatrix')
+let u_ViewMatrix = gl.getUniformLocation(shaderProgram.id, 'u_ViewMatrix')
+let u_ModelMatrix = gl.getUniformLocation(shaderProgram.id, 'u_ModelMatrix')
+*/
 
 /*
 

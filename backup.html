@@ -1,0 +1,50 @@
+<script id="2d-vertex-shader" type="notjs">
+ 
+  attribute vec4 a_Position;
+  attribute float a_Temperature;
+
+  uniform mat4 u_ProjectionMatrix;
+  uniform mat4 u_ViewMatrix;
+  uniform mat4 u_ModelMatrix;
+
+  varying float temp;
+  varying float height;
+ 
+  void main() {
+    vec4 changedPosition = vec4(a_Position.x, a_Position.y, a_Position.z, a_Position.w);
+    gl_Position = u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * changedPosition;
+    temp = clamp(a_Temperature, 0.0, 1.0);
+    height = a_Position.y;
+  }
+ 
+</script>
+
+<script id="2d-fragment-shader" type="notjs">
+ 
+  // fragment shaders don't have a default precision so we need
+  // to pick one. mediump is a good default
+  precision mediump float;
+
+  varying float temp;
+  varying float height;
+
+  uniform sampler2D u_Texture;
+ 
+  void main() {
+    // gl_FragColor is a special variable a fragment shader
+    // is responsible for setting
+    //gl_FragColor = vec4(temp, 0, 0, 1); // return redish-purple
+    //gl_FragColor = texture2D(u_Texture, vec2(height, temp));
+
+    vec3 objectColor = vec3(1.0, 0.0, 0.5);
+    vec3 lightColor = vec3(1.0, 1.0, 1.0);
+    float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * lightColor;
+    vec3 result = ambient * objectColor;
+
+    gl_FragColor = vec4(result, 1.0);
+
+    //gl_FragColor = vec4(1, 0, 0.5, 1);
+  }
+ 
+</script>
