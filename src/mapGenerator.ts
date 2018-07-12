@@ -13,11 +13,12 @@ export function gridNoise(size: number): number[] {
 
       const wave = (waveX + waveY) / 2
 
-      const random = Math.random() * 0.1 - 0.05
+      const random = Math.random() * 0.04 - 0.02
 
-      let height = Math.min(Math.max(wave + random, 0), 1)
+      let height = Math.min(Math.max(wave + random, 0), 1) * 10
 
       heights.push(height)
+      //heights.push(0)
     }
   }
   return heights

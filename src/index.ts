@@ -1,54 +1,15 @@
-/*
-import { Renderer, Renderable } from './rendering'
-
-document.addEventListener('DOMContentLoaded', initialize, false);
-
-class StaticEntity implements Renderable {
-  x: number
-  y: number
-
-  svg: HTMLImageElement
-  svgIsLoaded: boolean
-
-  constructor(x: number, y: number) {
-    this.x = x
-    this.y = y
-    this.svg = new Image()
-    this.svg.src = './my4.svg'
-    this.svgIsLoaded = false
-    this.svg.onload = () => this.svgIsLoaded = true
-  }
-  render(context: CanvasRenderingContext2D): void {
-    if (!this.svgIsLoaded) {
-      return
-    }
-    context.translate(this.x, this.y)
-    //context.rotate(r)
-    //context.scale(s, s)
-    context.drawImage(this.svg, -200, -200, 400, 400)
-  }
-}
-
-function initialize() {
-  const renderables: Renderable[] = new Array()
-  renderables.push(new StaticEntity(200, 200))
-
-  const renderer = new Renderer('drawroot', renderables)
-}
-*/
-
-// -- Temporary Sources
-var vertexShaderSource = (document.getElementById('2d-vertex-shader') as any).text
-var fragmentShaderSource = (document.getElementById('2d-fragment-shader') as any).text
 
 import { mat4, vec3 } from 'gl-matrix'
 import * as Renderer from './rendering'
 import * as Input from './input'
-//import { Shader, ShaderProgram, GridShaderProgram } from './shaders'
-//import { GridMesh } from './mesh';
+import * as Mesh from './mesh'
+
+// -- Temporary Sources
+var vertexShaderSource = (document.getElementById('shader-vertex-terrain') as any).text
+var fragmentShaderSource = (document.getElementById('shader-fragment-terrain') as any).text
 
 let canvas: Renderer.AdvancedCanvas = Renderer.createCanvas('canvas', 1200, 900)
-let gl: WebGLRenderingContext = canvas.getContext('webgl')
+let gl: WebGL2RenderingContext = canvas.getContext('webgl2', {antialias: false}) as WebGL2RenderingContext
 
 // -- Temporary Input
 var mouseX = 0
@@ -67,61 +28,6 @@ if (!gl) {
 // -- Init Setup
 gl.clearColor(0, 0, 0, 0)
 gl.enable(gl.DEPTH_TEST)
-
-/*
-const shaderProgram: ShaderProgram = new GridShaderProgram(gl,
-   new Shader(gl, vertexShaderSource, gl.VERTEX_SHADER),
-   new Shader(gl, fragmentShaderSource, gl.FRAGMENT_SHADER)
-)
-
-const mesh: GridMesh = new GridMesh(gl, 20)
-
-let pm = mat4.create()
-mat4.perspective(pm, 1, canvas.canvasInfo.aspectRatio, 0.1, 10000)
-let vm = mat4.create()
-let mm = mat4.create()
-
-const objects = [
-  {
-    shaderProgram: shaderProgram,
-    mesh: mesh,
-    rotX: 0
-  }
-]
-
-const texture = loadTexture(gl, 'envmap1.png');
-gl.activeTexture(gl.TEXTURE0);
-gl.bindTexture(gl.TEXTURE_2D, texture);
-
-render(gl)
-
-function render(gl: WebGLRenderingContext) {
-  requestAnimationFrame(() => render(gl))
-  
-  gl.clear(gl.COLOR_BUFFER_BIT)
-
-  mesh.bind()
-  shaderProgram.bind()
-  
-  mat4.lookAt(
-    vm,
-    vec3.fromValues(mouseX * 4, mouseY * 4, 8 * 2),
-    vec3.fromValues(0, 0, 0),
-    vec3.fromValues(0, 1, 0),
-  )
-
-  objects.forEach(obj => {
-    mat4.rotateX(mm, mat4.identity(mm), obj.rotX)
-
-    gl.uniformMatrix4fv(obj.shaderProgram.u_ProjectionMatrix, false, pm)
-    gl.uniformMatrix4fv(obj.shaderProgram.u_ViewMatrix, false, vm)
-    gl.uniformMatrix4fv(obj.shaderProgram.u_ModelMatrix, false, mm)
-    gl.uniform1i(obj.shaderProgram.u_Texture, 0)
-
-    gl.drawElements(gl.TRIANGLES, obj.mesh.vertexIndicies.length, gl.UNSIGNED_SHORT, obj.mesh.indiciesBuffer as any)
-  })
-}
-*/
 
 // Vertex Shader
 const vertexShader = gl.createShader(gl.VERTEX_SHADER)
@@ -159,15 +65,12 @@ gl.useProgram(shaderProgram) // When to use????""
 const u_ProjectionMatrixLocation = gl.getUniformLocation(shaderProgram, 'u_ProjectionMatrix')
 const u_ViewMatrixLocation = gl.getUniformLocation(shaderProgram, 'u_ViewMatrix')
 const u_ModelMatrixLocation = gl.getUniformLocation(shaderProgram, 'u_ModelMatrix')
-//const u_TextureLocation = gl.getUniformLocation(shaderProgram, 'U_Texture')
+const u_TextureLocation = gl.getUniformLocation(shaderProgram, 'u_Texture')
 const a_Position = gl.getAttribLocation(shaderProgram, 'a_Position')
+const a_Normal = gl.getAttribLocation(shaderProgram, 'a_Normal')
 
-// Uniform and Attribute Data
-const vertexPositions = [
-  0, 0, 0,
-  0, 0.5, 0,
-  0.5, 0, 0,
-]
+// Positions
+const vertexPositions = Mesh.createGridVerticies(120)
 const vertexPositionsBuffer = gl.createBuffer()
 gl.bindBuffer(gl.ARRAY_BUFFER, vertexPositionsBuffer)
 gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexPositions), gl.STATIC_DRAW)
@@ -175,31 +78,57 @@ gl.vertexAttribPointer(a_Position, 3, gl.FLOAT, false, 0, 0)
 gl.enableVertexAttribArray(a_Position)
 
 // Indicies
-const vertexIndicies = [
-  0, 1, 2,
-]
+const vertexIndicies = Mesh.createGridIndexes(120)
 const vertexIndiciesBuffer = gl.createBuffer()
 gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, vertexIndiciesBuffer)
 gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vertexIndicies), gl.STATIC_DRAW)
+
+// Normals
+const vertexNormals = Mesh.calculateNormals(vertexPositions, vertexIndicies)
+const vertexNormalsBuffer = gl.createBuffer()
+gl.bindBuffer(gl.ARRAY_BUFFER, vertexNormalsBuffer)
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertexNormals), gl.STATIC_DRAW)
+gl.vertexAttribPointer(a_Normal, 3, gl.FLOAT, false, 0, 0)
+gl.enableVertexAttribArray(a_Normal)
 
 // Matricies
 let projectionMatrix = mat4.create()
 let viewMatrix = mat4.create()
 let modelMatrix = mat4.create()
 
+// Texture
+loadTexture(gl, 'envmap1.png')
+
+// Framebuffers
+const frameBuffer1 = gl.createFramebuffer()
+gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer1)
+const depthBuffer1 = gl.createRenderbuffer()
+gl.bindRenderbuffer(gl.RENDERBUFFER, depthBuffer1)
+gl.renderbufferStorageMultisample(gl.RENDERBUFFER, 4, gl.DEPTH24_STENCIL8, canvas.canvasInfo.drawWidth, canvas.canvasInfo.drawHeight)
+gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, depthBuffer1)
+const colorBuffer1 = gl.createRenderbuffer()
+gl.bindRenderbuffer(gl.RENDERBUFFER, colorBuffer1)
+gl.renderbufferStorageMultisample(gl.RENDERBUFFER, 4, gl.RGBA8, canvas.canvasInfo.drawWidth, canvas.canvasInfo.drawHeight)
+gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, colorBuffer1)
+if(gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+  throw new Error('This combination of attachments do not work on the framebuffer')
+}
 
 mat4.perspective(projectionMatrix, 1, canvas.canvasInfo.aspectRatio, 0.1, 10000)
 
 render(gl)
-function render(gl: WebGLRenderingContext) {
+function render(gl: WebGL2RenderingContext) {
   requestAnimationFrame(() => render(gl))
+
+  gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer1)
+  //gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer0)
   
-  gl.clear(gl.COLOR_BUFFER_BIT)
+  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
   
   // Set view matrix
   mat4.lookAt(
     viewMatrix,
-    vec3.fromValues((mouseX - 0.5) * 10, (mouseY) * 2, 2),
+    vec3.fromValues((mouseX - 0.5) * 80, (mouseY) * 80, 80),
     vec3.fromValues(0, 0, 0),
     vec3.fromValues(0, 1, 0),
   )
@@ -211,8 +140,17 @@ function render(gl: WebGLRenderingContext) {
   gl.uniformMatrix4fv(u_ProjectionMatrixLocation, false, projectionMatrix)
   gl.uniformMatrix4fv(u_ViewMatrixLocation, false, viewMatrix)
   gl.uniformMatrix4fv(u_ModelMatrixLocation, false, modelMatrix)
+  gl.uniform1i(u_TextureLocation, 0);
 
   gl.drawElements(gl.TRIANGLES, vertexIndicies.length, gl.UNSIGNED_SHORT, vertexIndiciesBuffer as any)
+
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER, frameBuffer1)
+  gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null)
+  gl.blitFramebuffer(0, 0,
+    canvas.canvasInfo.drawWidth,
+    canvas.canvasInfo.drawHeight, 0, 0,
+    canvas.canvasInfo.drawWidth,
+    canvas.canvasInfo.drawHeight, gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT, gl.NEAREST)  
 }
 
 
