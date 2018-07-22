@@ -1,19 +1,17 @@
-import { gridNoise } from './mapGenerator'
-import { vec3 } from 'gl-matrix';
 import { normalized } from './vec';
 
 export function createGridVerticies(size: number) {
   const yStart = (size - 1) / 2
   const xStart = -yStart
   const verticies = []
-  const heights = gridNoise(size)
-  let count = 0
+  // const heights = gridNoise(size)
+  // let count = 0
   for (let y = yStart; y >= -yStart; y--) {
     for (let x = xStart; x <= -xStart; x++) {
       verticies.push(x)
-      verticies.push(heights[count])
+      verticies.push(0)
       verticies.push(y)
-      count++
+      // count++
     }
   }
   return verticies

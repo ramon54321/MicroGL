@@ -8,7 +8,185 @@
     }
   </style>
 
-  <script id="shader-vertex-terrain" type="notjs">
+<script id="shader-vertex-quad" type="notjs">
+
+  attribute vec2 a_Position;
+  attribute vec2 a_Uv;
+
+  varying vec2 v_Uv;
+
+  void main() {
+    gl_Position = vec4(a_Position, 0.0, 1.0);
+    v_Uv = a_Uv;
+  }
+  
+</script>
+
+<script id="shader-fragment-quad" type="notjs">
+  
+  precision mediump float;
+
+  uniform sampler2D u_Texture;
+
+  varying vec2 v_Uv;
+
+  void main() {
+    vec3 texture = texture2D(u_Texture, v_Uv).xyz;
+    //gl_FragColor = vec4(1.0, 0.0, 0.5, 1.0);
+    if (texture.r < -0.28) {
+      gl_FragColor = vec4(texture.r * 0.75, texture.g * 0.95, texture.b, 1.0);
+    } else {
+      gl_FragColor = vec4(texture, 1.0);
+    }
+  }
+  
+</script>
+
+<script id="shader-vertex-terrain" type="notjs">
+
+    attribute vec2 a_Position;
+    attribute vec2 a_Uv;
+
+    uniform mat4 u_ViewMatrix;
+  
+    varying vec2 v_Uv;
+  
+    void main() {
+      gl_Position = u_ViewMatrix * vec4(a_Position, 0.0, 1.0);
+      v_Uv = a_Uv;
+    }
+    
+  </script>
+  
+  <script id="shader-fragment-terrain" type="notjs">
+    
+    precision mediump float;
+  
+    uniform sampler2D u_TextureColor;
+    uniform sampler2D u_TextureDetail;
+    uniform float u_Time;
+  
+    varying vec2 v_Uv;
+
+    #define M_PI 3.1415926535897932384626433832795
+
+    float getInfluence(float t, float s, float l) {
+      if (t < s || t > s + l) {
+        return 0.0;
+      }
+      float a = M_PI * (t - s) * (1.0 / l);
+      float b = sin(a);
+      return b;
+    }
+
+    //	Simplex 3D Noise 
+    //	by Ian McEwan, Ashima Arts
+    //
+    vec4 permute(vec4 x){return mod(((x*34.0)+1.0)*x, 289.0);}
+    vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+
+    float snoise(vec3 v){ 
+      const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+      const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+
+    // First corner
+      vec3 i  = floor(v + dot(v, C.yyy) );
+      vec3 x0 =   v - i + dot(i, C.xxx) ;
+
+    // Other corners
+      vec3 g = step(x0.yzx, x0.xyz);
+      vec3 l = 1.0 - g;
+      vec3 i1 = min( g.xyz, l.zxy );
+      vec3 i2 = max( g.xyz, l.zxy );
+
+      //  x0 = x0 - 0. + 0.0 * C 
+      vec3 x1 = x0 - i1 + 1.0 * C.xxx;
+      vec3 x2 = x0 - i2 + 2.0 * C.xxx;
+      vec3 x3 = x0 - 1. + 3.0 * C.xxx;
+
+    // Permutations
+      i = mod(i, 289.0 ); 
+      vec4 p = permute( permute( permute( 
+                i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+              + i.y + vec4(0.0, i1.y, i2.y, 1.0 )) 
+              + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+
+    // Gradients
+    // ( N*N points uniformly over a square, mapped onto an octahedron.)
+      float n_ = 1.0/7.0; // N=7
+      vec3  ns = n_ * D.wyz - D.xzx;
+
+      vec4 j = p - 49.0 * floor(p * ns.z *ns.z);  //  mod(p,N*N)
+
+      vec4 x_ = floor(j * ns.z);
+      vec4 y_ = floor(j - 7.0 * x_ );    // mod(j,N)
+
+      vec4 x = x_ *ns.x + ns.yyyy;
+      vec4 y = y_ *ns.x + ns.yyyy;
+      vec4 h = 1.0 - abs(x) - abs(y);
+
+      vec4 b0 = vec4( x.xy, y.xy );
+      vec4 b1 = vec4( x.zw, y.zw );
+
+      vec4 s0 = floor(b0)*2.0 + 1.0;
+      vec4 s1 = floor(b1)*2.0 + 1.0;
+      vec4 sh = -step(h, vec4(0.0));
+
+      vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+      vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+
+      vec3 p0 = vec3(a0.xy,h.x);
+      vec3 p1 = vec3(a0.zw,h.y);
+      vec3 p2 = vec3(a1.xy,h.z);
+      vec3 p3 = vec3(a1.zw,h.w);
+
+    //Normalise gradients
+      vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+      p0 *= norm.x;
+      p1 *= norm.y;
+      p2 *= norm.z;
+      p3 *= norm.w;
+
+    // Mix final noise value
+      vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+      m = m * m;
+      return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), 
+                                    dot(p2,x2), dot(p3,x3) ) );
+    }
+  
+    void main() {
+      vec4 textureColor = texture2D(u_TextureColor, v_Uv);
+
+      float waterInfluence = getInfluence(textureColor.a, 0.0, 0.24);
+      float beachInfluence = getInfluence(textureColor.a, 0.18, 0.145);
+      float grassInfluence = getInfluence(textureColor.a, 0.24, 0.26);
+
+      vec3 textureDetail500 = texture2D(u_TextureDetail, v_Uv * 500.0).rgb;
+      vec3 textureDetail1000 = texture2D(u_TextureDetail, v_Uv * 1000.0).rgb;
+      vec3 textureDetail2000 = texture2D(u_TextureDetail, v_Uv * 2000.0).rgb;
+
+      // Ocean
+      float rate = 5.0;
+      float t = u_Time / rate;
+      vec2 uv = v_Uv;
+      float scale = 0.001;
+      float result = 0.0;
+      for (float i = 0.0; i < 5.0; i++){
+        result += snoise(vec3((uv.x)/scale, (uv.y)/scale, t*2.0))/pow(2.0, i);
+          scale /= 2.0;
+      }
+      result = (result + 1.0)/4.0;
+      result += .5;
+      result = pow(result, 2.0);
+      vec4 oceanColor = vec4(result, result, result, 1.0);
+
+      vec3 textureTotal = textureColor.rgb - ((textureDetail2000.r - 0.85) / 6.0) * beachInfluence + ((textureDetail500.g - 0.5) / 8.0) * grassInfluence + ((oceanColor.rgb - 0.5) / 4.5) * waterInfluence;
+      gl_FragColor = vec4(textureTotal, 1.0);
+    }
+    
+  </script>
+
+  <script id="shader-vertex-old" type="notjs">
  
     attribute vec4 a_Position;
     attribute vec3 a_Normal;
@@ -30,7 +208,7 @@
    
   </script>
 
-  <script id="shader-fragment-terrain" type="notjs">
+  <script id="shader-fragment-old" type="notjs">
    
     precision mediump float;
 
@@ -64,6 +242,7 @@
   </script>
 </head>
 <body>
+  <img src="gradient2.png" id="gradient" style="display: none;" />
   <canvas id="canvas"></canvas>
 
   <script src="dist/bundle.js"></script>
