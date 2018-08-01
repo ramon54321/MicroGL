@@ -8,6 +8,169 @@
     }
   </style>
 
+
+
+
+
+
+<script id="shader-vertex-diffuse" type="notjs">
+
+  attribute vec3 a_Position;
+  attribute vec3 a_Normal;
+  attribute vec3 a_Color;
+
+  uniform mat4 u_ModelMatrix;
+  uniform mat4 u_ViewMatrix;
+  uniform mat4 u_ProjectionMatrix;
+
+  varying vec3 v_Normal;
+  varying vec3 v_Color;
+
+  void main() {
+    gl_Position =  u_ProjectionMatrix * u_ViewMatrix * u_ModelMatrix * vec4(a_Position, 1.0);
+    v_Normal = a_Normal;
+    v_Color = a_Color;
+  }
+  
+</script>
+
+<script id="shader-fragment-diffuse" type="notjs">
+  
+  precision mediump float;
+
+  const float gamma = 2.2;
+  const float sunStrength = 1.0;
+  const float ambientFactor = 1.65;
+
+  varying vec3 v_Normal;
+  varying vec3 v_Color;
+
+  float getSunContributionFactor() {
+    vec3 lightDirection = vec3(0.4 , 1.0, 0.2);
+    float brightness = dot(v_Normal, lightDirection) / (length(lightDirection) * length(v_Normal));
+    return brightness;
+  }
+
+  void main() {
+    
+    // Get HDR Color
+    vec3 ambientColor = vec3(0.3, 0.26, 0.22) * ambientFactor;
+    vec3 diffuseColor = getSunContributionFactor() * sunStrength * v_Color;
+    vec3 hdrColor = ambientColor + diffuseColor;
+  
+    vec3 mappedColor;
+
+    mappedColor = hdrColor;
+   
+    gl_FragColor = vec4(mappedColor, 1.0);
+  }
+  
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script id="shader-vertex-stepterrain" type="notjs">
+
+  attribute vec3 a_Position;
+  attribute vec3 a_Normal;
+  attribute vec3 a_Color;
+
+  uniform mat4 u_ViewMatrix;
+  uniform mat4 u_ProjectionMatrix;
+
+  varying vec3 v_Normal;
+  varying vec3 v_Color;
+
+  void main() {
+    gl_Position =  u_ProjectionMatrix * u_ViewMatrix * vec4(a_Position, 1.0);
+    v_Normal = a_Normal;
+    v_Color = a_Color;
+  }
+  
+</script>
+
+<script id="shader-fragment-stepterrain" type="notjs">
+  
+  precision mediump float;
+
+  varying vec3 v_Normal;
+  varying vec3 v_Color;
+
+  float luma(vec3 color) {
+    return dot(color, vec3(0.299, 0.587, 0.114));
+  }
+
+  float luma(vec4 color) {
+    return dot(color.rgb, vec3(0.299, 0.587, 0.114));
+  }
+
+  float getSunContributionFactor() {
+    vec3 lightDirection = vec3(0.4 , 1.0, 0.2);
+    float brightness = dot(v_Normal, lightDirection) / (length(lightDirection) * length(v_Normal));
+    return brightness;
+  }
+
+  void main() {
+
+    const float gamma = 2.2;
+    const float sunStrength = 1.5;
+    
+    // Get HDR Color
+    vec3 hdrColor = getSunContributionFactor() * sunStrength * v_Color;
+  
+    vec3 mappedColor;
+
+    mappedColor = hdrColor;
+   
+    gl_FragColor = vec4(mappedColor, 1.0);
+  }
+
+
+  /*
+// Reinhart Tone Map
+    vec3 mappedColor = hdrColor / (hdrColor + vec3(1.0));
+    
+    // Gamma Correction
+    mappedColor = pow(mappedColor, vec3(1.0 / gamma));
+
+    if (luma(hdrColor) > 1.0) {
+      mappedColor = vec3(1.0);
+    } else {
+      mappedColor = vec3(0.0);
+    }
+  */
+  
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <script id="shader-vertex-quad" type="notjs">
 
   attribute vec2 a_Position;
@@ -39,7 +202,7 @@
       gl_FragColor = vec4(texture, 1.0);
     }
   }
-  
+
 </script>
 
 <script id="shader-vertex-terrain" type="notjs">

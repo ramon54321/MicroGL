@@ -53,6 +53,14 @@ export function sum(a: number[]): number {
   return total
 }
 
+export function average(a: number[]): number {
+  let total = 0
+  for (let i = 0; i < a.length; i++) {
+    total += a[i]
+  }
+  return total / a.length
+}
+
 export function sigmoid(t: number, intensity: number) {
   if(intensity < 5 || intensity > 20) {
     console.warn("Sigmoid intensity clamped between 5 and 20")

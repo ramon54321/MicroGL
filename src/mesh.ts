@@ -1,4 +1,7 @@
 import { normalized } from './vec';
+import { normalize } from './math';
+
+
 
 export function createGridVerticies(size: number) {
   const yStart = (size - 1) / 2
@@ -34,7 +37,54 @@ export function createGridIndexes(size: number) {
   return indexes
 }
 
-export function calculateNormals(vertexPositions: number[], vertexIndicies: number[]): number[] {
+export function calculateNormals(vertexPositions: number[]): number[] {
+  /**
+   * For every 3 verticies, make a face
+   * For each face, calculate normal
+   * For each normal, output it 3 times
+   */
+  let normals = []
+  for (let vertexIndex = 0; vertexIndex < vertexPositions.length; vertexIndex += 9) {
+    const vertexAPosition = [
+      vertexPositions[vertexIndex + 0],
+      vertexPositions[vertexIndex + 1],
+      vertexPositions[vertexIndex + 2],
+    ]
+    const vertexBPosition = [
+      vertexPositions[vertexIndex + 3],
+      vertexPositions[vertexIndex + 4],
+      vertexPositions[vertexIndex + 5],
+    ]
+    const vertexCPosition = [
+      vertexPositions[vertexIndex + 6],
+      vertexPositions[vertexIndex + 7],
+      vertexPositions[vertexIndex + 8],
+    ]
+    const edgeA = [
+      vertexBPosition[0] - vertexAPosition[0],
+      vertexBPosition[1] - vertexAPosition[1],
+      vertexBPosition[2] - vertexAPosition[2],
+    ]
+    const edgeB = [
+      vertexCPosition[0] - vertexAPosition[0],
+      vertexCPosition[1] - vertexAPosition[1],
+      vertexCPosition[2] - vertexAPosition[2],
+    ]
+    const faceNormalX = edgeA[1] * edgeB[2] - edgeA[2] * edgeB[1]
+    const faceNormalY = edgeA[2] * edgeB[0] - edgeA[0] * edgeB[2]
+    const faceNormalZ = edgeA[0] * edgeB[1] - edgeA[1] * edgeB[0]
+    const faceNormal = [faceNormalX, faceNormalY, faceNormalZ]
+
+    const normalizedFaceNormal = normalized(faceNormal)
+
+    normals = normals.concat(normalizedFaceNormal)
+    normals = normals.concat(normalizedFaceNormal)
+    normals = normals.concat(normalizedFaceNormal)
+  }
+  return normals
+}
+
+export function calculateNormalsWithIndicies(vertexPositions: number[], vertexIndicies: number[]): number[] {
   /**
    * For every 3 indicies, make a face
    * For each face, calculate normal
