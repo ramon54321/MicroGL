@@ -1,15 +1,47 @@
-// import MGLScene from "./MGLScene";
+import MGLContext from './MGLContext'
+import MGLProgram from './MGLProgram'
+import MGLMesh from './MGLMesh'
+import { mat4 } from 'gl-matrix'
 
-// export default class MGLModel {
-//   mglMaterial: MGLMaterial
+export interface MGLModelOptions {
+  mglContext: MGLContext
+  mglProgram: MGLProgram
+  mglMesh: MGLMesh
+}
 
-//   constructor(mglMaterial: MGLMaterial) {
-//     this.mglMaterial = mglMaterial
-//   }
+export default class MGLModel {
+  options: MGLModelOptions
 
-//   render(gl: WebGL2RenderingContext, mglScene: MGLScene) {
-//     // Bind Material
-//     this.mglMaterial.bind()
+  constructor(mglModelOptions: MGLModelOptions) {
+    this.options = mglModelOptions
 
-//   }
-// }
+    this.init()
+  }
+
+  u_modelMatrixLocation: WebGLUniformLocation
+
+  private init() {
+    const gl = this.options.mglContext.gl
+    this.u_modelMatrixLocation = gl.getUniformLocation(
+      this.options.mglProgram.program,
+      'u_modelMatrix',
+    )
+  }
+
+  private uploadUniforms() {
+    const modelMatrix = mat4.create()
+    mat4.identity(modelMatrix)
+    
+    const gl = this.options.mglContext.gl
+    gl.uniformMatrix4fv(this.u_modelMatrixLocation, false, modelMatrix)
+  }
+
+  render() {
+    this.options.mglProgram.bind()
+    this.options.mglMesh.bind()
+    this.uploadUniforms()
+
+    const gl = this.options.mglContext.gl
+    gl.drawArrays(gl.TRIANGLES, 0, this.options.mglMesh.elementCount)
+  }
+}

@@ -1,22 +1,22 @@
-export interface MGLWindowOptions {
+export interface MGLContextOptions {
   id: string
   width: number
   height: number
   multisample: boolean
 }
 
-export default class MGLWindow {
+export default class MGLContext {
   advancedCanvas: MGLAdvancedCanvas
   gl: WebGL2RenderingContext
 
-  constructor(mglWindowOptions: MGLWindowOptions) {
+  constructor(mglContextOptions: MGLContextOptions) {
     this.advancedCanvas = mglCreateCanvas(
-      mglWindowOptions.id,
-      mglWindowOptions.width,
-      mglWindowOptions.height,
+      mglContextOptions.id,
+      mglContextOptions.width,
+      mglContextOptions.height,
     )
     this.gl = this.advancedCanvas.getContext('webgl2', {
-      antialias: mglWindowOptions.multisample
+      antialias: mglContextOptions.multisample
     })
     if (!this.gl) {
       throw new Error('WebGL Not Supported')
@@ -24,11 +24,11 @@ export default class MGLWindow {
   }
 }
 
-interface MGLAdvancedCanvas extends HTMLCanvasElement {
+export interface MGLAdvancedCanvas extends HTMLCanvasElement {
   canvasInfo: MGLCanvasInfo
 }
 
-interface MGLCanvasInfo {
+export interface MGLCanvasInfo {
   styleWidth: number
   styleHeight: number
   drawWidth: number

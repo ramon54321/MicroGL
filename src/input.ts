@@ -1,6 +1,7 @@
-import { AdvancedCanvas } from "./rendering";
+import { MGLAdvancedCanvas } from "./rendering/MGLContext";
 
-export function getMousePosition(canvas: AdvancedCanvas, event) {
+
+export function getMousePosition(canvas: MGLAdvancedCanvas, event) {
   var rect = canvas.getBoundingClientRect()
   return {
     x: event.clientX - rect.left,
