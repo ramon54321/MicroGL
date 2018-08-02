@@ -4,7 +4,7 @@ import MGLRenderer, { MGLRendererOptions } from './rendering/MGLRenderer';
 import MGLProgram, { MGLProgramOptions } from './rendering/MGLProgram';
 import MGLMesh, { MGLMeshOptions } from './rendering/MGLMesh';
 import MGLModel, { MGLModelOptions } from './rendering/MGLModel';
-// import MGLScene from './rendering/MGLScene';
+import MGLScene, { MGLSceneOptions } from './rendering/MGLScene';
 
 // ------------------------
 
@@ -50,16 +50,18 @@ const mglModelOptions: MGLModelOptions = {
 }
 const mglModel: MGLModel = new MGLModel(mglModelOptions)
 
+const mglSceneOptions: MGLSceneOptions = {
 
-// const mglScene: MGLScene = new MGLScene()
-// mglScene.addModel(mglModel)
+}
+const mglScene: MGLScene = new MGLScene(mglSceneOptions)
+mglScene.addModel(mglModel)
 
 
 tick()
 function tick() {
   requestAnimationFrame(tick)
 
-  mglRenderer.render(mglModel)
+  mglRenderer.render(mglScene)
   
 
 }

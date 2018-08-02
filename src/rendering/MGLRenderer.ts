@@ -1,5 +1,6 @@
 import MGLContext, { MGLCanvasInfo } from "./MGLContext";
 import MGLModel from "./MGLModel";
+import MGLScene from "./MGLScene";
 
 export interface MGLRendererOptions {
   mglContext: MGLContext
@@ -17,7 +18,7 @@ export default class MGLRenderer {
     gl.enable(gl.DEPTH_TEST)
   }
 
-  render(model: MGLModel) {
+  render(mglScene: MGLScene) {
     const gl = this.mglWindow.gl
     
     // Set Viewport
@@ -31,8 +32,7 @@ export default class MGLRenderer {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
     // Render each model
-    //mglScene.models.forEach(model => model.render(gl, mglScene))
-    model.render()
+    mglScene.models.forEach(model => model.render())
 
     // Potential post process
   }
