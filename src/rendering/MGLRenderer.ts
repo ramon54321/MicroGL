@@ -21,19 +21,17 @@ export default class MGLRenderer {
   render(mglScene: MGLScene) {
     const gl = this.mglWindow.gl
     
-    // Set Viewport
-    const canvasInfo: MGLCanvasInfo = this.mglWindow.advancedCanvas.canvasInfo
-    gl.viewport(0, 0, canvasInfo.drawWidth, canvasInfo.drawHeight);
-
     // Render Target
     gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+
+    // Set Viewport
+    const canvasInfo: MGLCanvasInfo = this.mglWindow.advancedCanvas.canvasInfo
+    gl.viewport(0, 0, canvasInfo.drawWidth, canvasInfo.drawHeight)
 
     // Clear Buffer
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
     // Render each model
     mglScene.models.forEach(model => model.render())
-
-    // Potential post process
   }
 }

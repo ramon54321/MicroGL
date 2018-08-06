@@ -50,6 +50,7 @@ const mglModelOptions: MGLModelOptions = {
 }
 const mglModel: MGLModel = new MGLModel(mglModelOptions)
 
+
 const mglSceneOptions: MGLSceneOptions = {
 
 }
@@ -62,6 +63,4 @@ function tick() {
   requestAnimationFrame(tick)
 
   mglRenderer.render(mglScene)
-  
-
 }

@@ -11,7 +11,7 @@ export default class MGLScene {
     this.options = mglSceneOptions
   }
 
-  models: MGLModel[]
+  models: MGLModel[] = []
 
   addModel(mglModel: MGLModel) {
     this.models.push(mglModel)
